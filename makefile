@@ -11,7 +11,7 @@ CFLAGS:= -Iinclude -c
 LFLAGS:= -shared
 TARGET:= test.exe
 TARGET+= bacapp.exe
-TARGET+= bacnet.exe
+TARGET+= apdu.exe
 
 target: $(TARGET)
 	$(STRIP) $+
@@ -21,7 +21,7 @@ test.exe: $(OBJ) test/test.o
 	@$(CC) $+ -o $@
 bacapp.exe: $(OBJ) test/bacapp.o
 	@$(CC) $+ -o $@
-bacnet.exe: $(OBJ) test/bacnet.o
+apdu.exe: $(OBJ) test/apdu.o
 	@$(CC) $+ -o $@
 .c.o: $(wildcard include/*.h)
 	$(CC) $(CFLAGS) $*.c -o $*.o
