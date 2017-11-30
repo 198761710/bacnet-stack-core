@@ -15,12 +15,16 @@ int main(void)
 	{
 		frame.push(buf[i]);
 	}
-	printf("frame.type=%02X\n", frame.type());
-	printf("frame.src=%02X\n", frame.src());
-	printf("frame.dst=%02X\n", frame.dst());
-	printf("frame.dlen=%04X\n", frame.dlen());
-	printf("frame.hcrc=%02X\n", frame.hcrc());
-	printf("frame.chcrc=%02X\n", frame.chcrc());
+
+	printf("frame.type  = [%02X]\n", frame.type());
+	printf("frame.src   = [%02X]\n", frame.src());
+	printf("frame.dst   = [%02X]\n", frame.dst());
+	printf("frame.dlen  = [%04X]\n", frame.dlen());
+	printf("frame.hcrc  = [%02X]\n", frame.hcrc());
+	printf("frame.chcrc = [%02X]\n", frame.chcrc());
+	printf("frame.dcrc  = [%04X]\n", frame.dcrc());
+	printf("frame.cdcrc = [%04X]\n", frame.cdcrc());
+
 	printf("frame.[");
 	for(int i = 0; i < frame.length(); i++)
 	{
