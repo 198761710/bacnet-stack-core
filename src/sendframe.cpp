@@ -44,6 +44,19 @@ bool SendFrame::check(void)
 	}
 	return true;
 }
+void SendFrame::clear(void)
+{
+	m_length = 0;
+}
+void SendFrame::showhex(void)
+{
+	printf("sendframe.[");
+	for(int i = 0; i < m_length; i++)
+	{
+		printf("%02X ", m_buffer[i]);
+	}
+	printf("\b].check(%d)\n", check());
+}
 unsigned char  SendFrame::type(void)
 {
 	return m_buffer[TypeIndex];
@@ -90,6 +103,18 @@ unsigned short SendFrame::cdcrc(void)
 	}
 
 	return ~crc;
+}
+void SendFrame::mstp(u8 type, u8 dst, u8 src)
+{
+	m_buffer[HeadIndex0] = 0x55;
+	m_buffer[HeadIndex1] = 0xff;
+	m_buffer[TypeIndex]  = type;
+	m_buffer[DstIndex]   = dst;
+	m_buffer[SrcIndex]   = src;
+	m_buffer[DlenIndex0] = 0x00;
+	m_buffer[DlenIndex1] = 0x00;
+	m_buffer[HcrcIndex]  = chcrc();
+	m_length = HcrcIndex + 1;
 }
 void SendFrame::apdu(u8 type, u8 dst, u8 src, u8* buf, int len)
 {

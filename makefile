@@ -1,20 +1,23 @@
-ARCH := powerpc-e300c3-linux-gnu-
 ARCH := 
+ARCH := powerpc-e300c3-linux-gnu-
 CC := $(ARCH)gcc
 CC := $(ARCH)g++
 AR := $(ARCH)ar
-STRIP:= $(ARCH)strip
-SRC:= $(wildcard src/*.c)
-SRX:= $(wildcard src/*.cpp)
-OBJ:= $(patsubst %.c, %.o, $(SRC))
-OBJ+= $(patsubst %.cpp, %.o, $(SRX))
-CFLAGS:= -Iinclude -Isrc -c
-LFLAGS:= -shared
-TARGET:= test.exe
-TARGET+= bacapp.exe
-TARGET+= apdu.exe
-TARGET+= recvframe.exe
-TARGET+= sendframe.exe
+STRIP := $(ARCH)strip
+SRC := $(wildcard src/*.c)
+SRC += $(wildcard uart/*.c)
+SRX := $(wildcard src/*.cpp)
+SRX += $(wildcard uart/*.cpp)
+OBJ := $(patsubst %.c, %.o, $(SRC))
+OBJ += $(patsubst %.cpp, %.o, $(SRX))
+CFLAGS := -Iinclude -Isrc -Iuart -c
+LFLAGS := -shared
+TARGET := test.exe
+TARGET += bacapp.exe
+TARGET += apdu.exe
+TARGET += recvframe.exe
+TARGET += sendframe.exe
+TARGET += bacnet.exe
 #TARGET+= bacnet-core.a
 #bacnet-core.a:$(OBJ)
 #	@$(AR) -rc $@ $+	
@@ -25,6 +28,8 @@ target: $(TARGET)
 recvframe.exe:$(OBJ) test/recvframe.o
 	@$(CC) $+ -o $@
 sendframe.exe:$(OBJ) test/sendframe.o
+	@$(CC) $+ -o $@
+bacnet.exe: $(OBJ) test/bacnet.o
 	@$(CC) $+ -o $@
 test.exe: $(OBJ) test/test.o
 	@$(CC) $+ -o $@

@@ -19,6 +19,10 @@ public:
 
 public:
 	bool check(void);
+	void clear(void);
+	void showhex(void);
+
+public:
 	unsigned char  type(void);
 	unsigned char  dst(void);
 	unsigned char  src(void);
@@ -27,6 +31,7 @@ public:
 	unsigned short dcrc(void);
 	unsigned char  chcrc(void);
 	unsigned short cdcrc(void);
+	void mstp(u8 type, u8 dst, u8 src);
 	void apdu(u8 type, u8 dst, u8 src, u8* buf, int len);
 };
 

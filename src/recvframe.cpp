@@ -11,6 +11,16 @@ void RecvFrame::clear(void)
 {
 	m_queue.clear();
 }
+void RecvFrame::showhex(void)
+{
+	printf("recvframe.[");
+	m_length = m_queue.size();
+	for(int i = 0; i < m_length; i++)
+	{
+		printf("%02X ", m_queue[i].c);
+	}
+	printf("\b].check(%d)\n", check());
+}
 void RecvFrame::push(unsigned char c)
 {
 	m_queue.push_back(DataNode(c));
@@ -19,7 +29,6 @@ bool RecvFrame::check(void)
 {
 	if( m_queue.empty() )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
 		return false;
 	}
 	if( m_queue[0].t.mdiff() > 500 )
@@ -31,12 +40,11 @@ bool RecvFrame::check(void)
 	m_length = m_queue.size();
 	if(m_length < 8 )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
 		return false;
 	}
 	if( 0x55 != m_queue[0].c )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
+		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
 		m_queue.pop_front();
 		return false;
 	}
@@ -54,7 +62,6 @@ bool RecvFrame::check(void)
 	}
 	if( dlen() == 0 )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
 		return true;
 	}
 	if( dlen() != m_length - NpduIndex0 - 2 )

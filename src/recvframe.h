@@ -34,7 +34,7 @@ class RecvFrame
 {
 protected:
 	unsigned int m_length;
-	unsigned char m_buffer[1024];
+	unsigned char m_buffer[MAX_APDU];
 	deque<DataNode> m_queue;
 
 public:
@@ -43,6 +43,7 @@ public:
 public:
 	bool check(void);
 	void clear(void);
+	void showhex(void);
 	void push(unsigned char c);
 
 public:
