@@ -18,6 +18,7 @@ TARGET += apdu.exe
 TARGET += recvframe.exe
 TARGET += sendframe.exe
 TARGET += bacnet.exe
+TARGET += mstp.exe
 #TARGET+= bacnet-core.a
 #bacnet-core.a:$(OBJ)
 #	@$(AR) -rc $@ $+	
@@ -25,17 +26,19 @@ TARGET += bacnet.exe
 target: $(TARGET)
 	@$(STRIP) $+
 	@ls -sh $+
-recvframe.exe:$(OBJ) test/recvframe.o
+mstp.exe:$(OBJ) ztest/mstp.o
 	@$(CC) $+ -o $@
-sendframe.exe:$(OBJ) test/sendframe.o
+recvframe.exe:$(OBJ) ztest/recvframe.o
 	@$(CC) $+ -o $@
-bacnet.exe: $(OBJ) test/bacnet.o
+sendframe.exe:$(OBJ) ztest/sendframe.o
 	@$(CC) $+ -o $@
-test.exe: $(OBJ) test/test.o
+bacnet.exe: $(OBJ) ztest/bacnet.o
 	@$(CC) $+ -o $@
-bacapp.exe: $(OBJ) test/bacapp.o
+test.exe: $(OBJ) ztest/test.o
 	@$(CC) $+ -o $@
-apdu.exe: $(OBJ) test/apdu.o
+bacapp.exe: $(OBJ) ztest/bacapp.o
+	@$(CC) $+ -o $@
+apdu.exe: $(OBJ) ztest/apdu.o
 	@$(CC) $+ -o $@
 .c.o: $(wildcard include/*.h)
 	$(CC) $(CFLAGS) $*.c -o $*.o
@@ -43,4 +46,4 @@ apdu.exe: $(OBJ) test/apdu.o
 	$(CC) $(CFLAGS) $*.cpp -o $*.o
 
 clean:
-	@rm -rfv $(OBJ) test/*.o *.so *.exe
+	@rm -rfv $(OBJ) ztest/*.o *.so *.exe

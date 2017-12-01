@@ -33,7 +33,7 @@ typedef enum
 class RecvFrame
 {
 protected:
-	unsigned int m_length;
+	signed int m_length;
 	unsigned char m_buffer[MAX_APDU];
 	deque<DataNode> m_queue;
 
@@ -50,7 +50,7 @@ public:
 	unsigned char  type(void);
 	unsigned char  dst(void);
 	unsigned char  src(void);
-	unsigned short dlen(void);
+	signed int     dlen(void);
 	unsigned char  hcrc(void);
 	unsigned int   length(void);
 	unsigned char* data(void);

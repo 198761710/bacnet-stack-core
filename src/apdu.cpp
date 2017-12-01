@@ -10,7 +10,22 @@ Apdu::Apdu(void)
 	memset(data, 0, sizeof(data));
 	memset(&rpdata, 0, sizeof(rpdata));
 	memset(&rsdata, 0, sizeof(rsdata));
+	memset(&wpdata, 0, sizeof(wpdata));
+	memset(&wsdata, 0, sizeof(wsdata));
 	memset(&rsvalue, 0, sizeof(rsvalue));
+}
+
+int Apdu::BinaryInput(int id, int instance)
+{
+	return MakeRequest(id, instance, OBJECT_BINARY_INPUT);
+}
+int Apdu::BinaryOutput(int id, int instance)
+{
+	return MakeRequest(id, instance, OBJECT_BINARY_OUTPUT);
+}
+int Apdu::BinaryValue(int id, int instance)
+{
+	return MakeRequest(id, instance, OBJECT_BINARY_VALUE);
 }
 int Apdu::AnalogInput(int id, int instance)
 {
@@ -23,18 +38,6 @@ int Apdu::AnalogOutput(int id, int instance)
 int Apdu::AnalogValue(int id, int instance)
 {
 	return MakeRequest(id, instance, OBJECT_ANALOG_VALUE);
-}
-int Apdu::BinaryInput(int id, int instance)
-{
-	return MakeRequest(id, instance, OBJECT_BINARY_INPUT);
-}
-int Apdu::BinaryOutput(int id, int instance)
-{
-	return MakeRequest(id, instance, OBJECT_BINARY_OUTPUT);
-}
-int Apdu::BinaryValue(int id, int instance)
-{
-	return MakeRequest(id, instance, OBJECT_BINARY_VALUE);
 }
 int Apdu::MultiStateInput(int id, int instance)
 {
@@ -67,6 +70,273 @@ int Apdu::MakeRequest(int id, int instance, BACNET_OBJECT_TYPE type)
 
 	return length = rp_encode_apdu(apdu, id, &rpdata);
 }
+
+
+int Apdu::SetBinaryInput(int id, int instance, uint32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_BINARY_INPUT;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetBinaryOutput(int id, int instance, uint32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_BINARY_OUTPUT;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetBinaryValue(int id, int instance, uint32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_BINARY_VALUE;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetAnalogInput(int id, int instance, float v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_REAL;
+	rpvalue.type.Real		 = v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_ANALOG_INPUT;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetAnalogOutput(int id, int instance, float v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_REAL;
+	rpvalue.type.Real		 = v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_ANALOG_OUTPUT;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetAnalogValue(int id, int instance, float v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_REAL;
+	rpvalue.type.Real		 = v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_ANALOG_VALUE;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetMultiStateInput(int id, int instance, uint32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_MULTI_STATE_INPUT;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetMultiStateOutput(int id, int instance, uint32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_MULTI_STATE_OUTPUT;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetMultiStateValue(int id, int instance, uint32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_MULTI_STATE_VALUE;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetSignedInt(int id, int instance, int32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_SIGNED_INT;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_INTEGER_VALUE;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+int Apdu::SetUnsignedInt(int id, int instance, uint32_t v)
+{
+	int len = 0;
+
+	rpvalue.context_specific = 0;
+	rpvalue.context_tag		 = 0;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
+	rpvalue.type.Unsigned_Int= v;
+
+	len = bacapp_encode_data(data, &rpvalue);
+	if( len < 1 )
+	{
+		return len;
+	}
+
+	memcpy(wpdata.application_data, data, len);
+	wpdata.application_data_len = len;
+	wpdata.object_type			= OBJECT_POSITIVE_INTEGER_VALUE;
+	wpdata.object_instance		= instance;
+	wpdata.object_property		= PROP_PRESENT_VALUE;
+	wpdata.array_index			= BACNET_ARRAY_ALL;
+
+	return (length = wp_encode_apdu(apdu, id, &wpdata));
+}
+
 
 int Apdu::AckAnalogInput(int id, int instance, float v)
 {
@@ -393,6 +663,22 @@ bool Apdu::IsUnsigned(void)
 	}
 	return false;
 }
+bool Apdu::IsEnumerated(void)
+{
+	if( false == parseok )
+	{
+		return false;
+	}
+	if( BACNET_APPLICATION_TAG_ENUMERATED == rsvalue.tag )
+	{
+		return true;
+	}
+	return false;
+}
+bool Apdu::Bool(void)
+{
+	return !!rsvalue.type.Unsigned_Int;
+}
 float Apdu::Real(void)
 {
 	return rsvalue.type.Real;
@@ -404,6 +690,18 @@ int32_t Apdu::Signed(void)
 uint32_t Apdu::Unsigned(void)
 {
 	return rsvalue.type.Unsigned_Int;
+}
+uint32_t Apdu::Enumerated(void)
+{
+	return rsvalue.type.Unsigned_Int;
+}
+uint32_t Apdu::Instance(void)
+{
+	return rsdata.object_instance;
+}
+uint8_t  Apdu::InvokeId(void)
+{
+	return invokeid;
 }
 uint8_t* Apdu::GetApdu(void)
 {

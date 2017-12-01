@@ -33,7 +33,7 @@ bool RecvFrame::check(void)
 	}
 	if( m_queue[0].t.mdiff() > 500 )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
+		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
 		m_queue.pop_front();
 		return false;
 	}
@@ -50,13 +50,13 @@ bool RecvFrame::check(void)
 	}
 	if( 0xff != m_queue[1].c )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
+		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
 		m_queue.pop_front();
 		return false;
 	}
 	if( hcrc() != chcrc() )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
+		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
 		m_queue.pop_front();
 		return false;
 	}
@@ -64,15 +64,19 @@ bool RecvFrame::check(void)
 	{
 		return true;
 	}
-	if( dlen() != m_length - NpduIndex0 - 2 )
+	if( (dlen() + NpduIndex0 + 2) > m_length )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
+		return false;
+	}
+	if( (dlen() + NpduIndex0 + 2) < m_length )
+	{
+		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
 		m_queue.pop_front();
 		return false;
 	}
 	if( dcrc() != cdcrc() )
 	{
-		printf("%s.%d\n", __func__, __LINE__);
+		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
 		m_queue.pop_front();
 		return false;
 	}
@@ -90,9 +94,13 @@ unsigned char  RecvFrame::src(void)
 {
 	return m_queue[SrcIndex].c;
 }
-unsigned short RecvFrame::dlen(void)
+signed int RecvFrame::dlen(void)
 {
-	return (m_queue[DlenIndex0].c << 8) | m_queue[DlenIndex1].c;
+	signed int l = 0;
+
+	l = (m_queue[DlenIndex0].c << 8) | m_queue[DlenIndex1].c;
+
+	return l %= MAX_APDU;
 }
 unsigned char  RecvFrame::hcrc(void)
 {
