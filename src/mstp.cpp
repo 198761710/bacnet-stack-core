@@ -5,6 +5,8 @@
 
 Mstp::Mstp(void)
 {
+	retry = 0;
+	recvok = false;
 }
 Mstp::Mstp(const string& dev, int baud, int parity, int bsize, int stop)
 {
@@ -13,20 +15,23 @@ Mstp::Mstp(const string& dev, int baud, int parity, int bsize, int stop)
 }
 bool Mstp::Run(void)
 {
-	unsigned char c = 0;
+	for(int i = 0; i < 8; i++)
+	{
+		unsigned char c = 0;
 
-	if( com.Recv(&c, 1) == 1 )
-	{
-		frame.push(c);
+		if( com.Recv(&c, 1) == 1 )
+		{
+			recving.init();
+			frame.push(c);
+		}
+		if( frame.check() )
+		{
+			ProcFrame(frame);
+			recvtime.init();
+			frame.clear();
+		}
+		StateMachine();
 	}
-	if( frame.check() )
-	{
-		//frame.showhex();
-		ProcFrame(frame);
-		recvtime.init();
-		frame.clear();
-	}
-	StateMachine();
 }
 void Mstp::StateMachine(void)
 {		
@@ -52,7 +57,11 @@ void Mstp::DoRequest(void)
 	{
 		return;
 	}
-	if( sendtime.mdiff() < 70 )
+	if( recving.mdiff() < 10 )
+	{
+		return;
+	}
+	if( recvok == false && sendtime.mdiff() < 200 )
 	{
 		return;
 	}
@@ -112,11 +121,18 @@ void Mstp::DoReadRequest(void)
 	sendframe.apdu(FrameDataRequest, i.dst, master.sudomaster, apdu.GetApdu(), apdu.Length());
 	if( com.Send(sendframe.data(), sendframe.length()) )
 	{
+		recvok = false;
 		sendtime.init();
 		master.invokeid++;
-		//printf("%s=>", __func__);
-		//sendframe.showhex();
-		instancelist.pop_front();
+		if( retry++ > 2 )
+		{
+			retry = 0;
+			instancelist.pop_front();
+		}
+	}
+	else
+	{
+		printf("send failed!\n");
 	}
 }
 void Mstp::DoWriteRequest(void)
@@ -164,11 +180,18 @@ void Mstp::DoWriteRequest(void)
 	sendframe.apdu(FrameDataRequest, i.dst, master.sudomaster, apdu.GetApdu(), apdu.Length());
 	if( com.Send(sendframe.data(), sendframe.length()) )
 	{
+		recvok = false;
 		sendtime.init();
 		master.invokeid++;
-		//printf("%s=>", __func__);
-		//sendframe.showhex();
-		instancelist.pop_front();
+		if( retry++ > 2 )
+		{
+			retry = 0;
+			instancelist.pop_front();
+		}
+	}
+	else
+	{
+		printf("send failed!\n");
 	}
 }
 void Mstp::Add(const Instance& instance)
@@ -268,6 +291,7 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 {
 	Apdu apdu;
 
+	recvok = true;
 	if( f.dlen() > 2 )
 	{
 		apdu.ParseApdu(f.apdu(), f.dlen()-2);
@@ -276,6 +300,8 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 	{
 		case 0x20://APDU_TYPE_SIMPLE_ACK:
 		case 0x30://APDU_TYPE_COMPLEX_ACK:
+			retry = 0;
+			instancelist.pop_front();
 			break;
 		case 0x50://APDU_TYPE_ERROR:
 			printf("APDU_TYPE_ERROR\n");
@@ -311,6 +337,5 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 	{
 		printf("---->Enumerated:instance(%d).value(%u)\n", apdu.Instance(), apdu.Enumerated());
 	}
-
 	return true;
 }

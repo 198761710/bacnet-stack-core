@@ -2,6 +2,20 @@
 #include "crc.h"
 #include "recvframe.h"
 
+#define debug_recvfailed()  \
+do{\
+	int len = m_queue.size(); \
+	if( len > 0 ) \
+	{\
+		printf("%s.", __func__); \
+		printf("%d:[", __LINE__); \
+	}\
+	for(int i = 0; i < len; i++) \
+	{\
+		printf("%02X ", m_queue[i].c); \
+	}\
+	if( len > 0 )printf("\b]\n");\
+}while(0)
 
 RecvFrame::RecvFrame(void)
 {
@@ -13,6 +27,11 @@ void RecvFrame::clear(void)
 }
 void RecvFrame::showhex(void)
 {
+	if( m_queue.empty() )
+	{
+		printf("m_queue.size(0)\n");
+		return;
+	}
 	printf("recvframe.[");
 	m_length = m_queue.size();
 	for(int i = 0; i < m_length; i++)
@@ -33,30 +52,52 @@ bool RecvFrame::check(void)
 	}
 	if( m_queue[0].t.mdiff() > 500 )
 	{
-		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
+		debug_recvfailed();
 		m_queue.pop_front();
-		return false;
+		if( m_queue.empty() )
+		{
+			return false;
+		}
+		while( m_queue[0].t.mdiff() > 500 )
+		{
+			m_queue.pop_front();
+			if( m_queue.empty() )
+			{
+				return false;
+			}
+		}
+	}
+	if( 0x55 != m_queue[0].c )
+	{
+		debug_recvfailed();
+		m_queue.pop_front();
+		if( m_queue.empty() )
+		{
+			return false;
+		}
+		while( m_queue[0].c != 0x55 )
+		{
+			m_queue.pop_front();
+			if( m_queue.empty() )
+			{
+				return false;
+			}
+		}
 	}
 	m_length = m_queue.size();
 	if(m_length < 8 )
 	{
 		return false;
 	}
-	if( 0x55 != m_queue[0].c )
-	{
-		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
-		m_queue.pop_front();
-		return false;
-	}
 	if( 0xff != m_queue[1].c )
 	{
-		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
+		debug_recvfailed();
 		m_queue.pop_front();
 		return false;
 	}
 	if( hcrc() != chcrc() )
 	{
-		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
+		debug_recvfailed();
 		m_queue.pop_front();
 		return false;
 	}
@@ -70,13 +111,13 @@ bool RecvFrame::check(void)
 	}
 	if( (dlen() + NpduIndex0 + 2) < m_length )
 	{
-		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
+		debug_recvfailed();
 		m_queue.pop_front();
 		return false;
 	}
 	if( dcrc() != cdcrc() )
 	{
-		printf("%s.%d.c=%02X\n", __func__, __LINE__, m_queue[0].c);
+		debug_recvfailed();
 		m_queue.pop_front();
 		return false;
 	}

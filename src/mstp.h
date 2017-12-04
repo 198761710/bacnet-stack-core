@@ -68,11 +68,14 @@ public:
 class Mstp
 {
 protected:
+	int retry;
+	bool recvok;
 	ComPort com;
 	Master master;
 	RecvFrame frame;
 	TimeOperator sendtime;
 	TimeOperator recvtime;
+	TimeOperator recving;
 	list<Instance> instancelist;
 	map<char, TimeOperator> mastermap;
 
