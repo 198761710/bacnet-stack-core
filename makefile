@@ -26,6 +26,10 @@ TARGET += mstp.exe
 target: $(TARGET)
 	@$(STRIP) $+
 	@ls -sh $+
+install:bacnet-core.a
+	[ -d lib ] || mkdir lib
+bacnet-core.a:$(OBJ)
+	@$(AR) -rc $@ $+
 mstp.exe:$(OBJ) ztest/mstp.o
 	@$(CC) $+ -o $@
 recvframe.exe:$(OBJ) ztest/recvframe.o
