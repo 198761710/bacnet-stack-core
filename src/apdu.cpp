@@ -675,6 +675,10 @@ bool Apdu::IsEnumerated(void)
 	}
 	return false;
 }
+uint32_t Apdu::Tag(void)
+{
+	return (uint32_t)rsvalue.tag;
+}
 bool Apdu::Bool(void)
 {
 	return !!rsvalue.type.Unsigned_Int;

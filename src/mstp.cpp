@@ -7,18 +7,19 @@ Mstp::Mstp(void)
 {
 	retry = 0;
 	recvok = false;
-	isvalue = false;
+	getvalue = 0;
 }
 Mstp::Mstp(const string& dev, int baud, int parity, int bsize, int stop)
 {
 	retry = 0;
 	recvok = false;
-	isvalue = false;
+	getvalue = 0;
 	assert( com.Open(dev) );
 	assert( com.Set(baud, parity, bsize, stop) );
 }
 bool Mstp::Run(void)
 {
+	valuelist.clear();
 	for(int i = 0; i < 8; i++)
 	{
 		unsigned char c = 0;
@@ -196,7 +197,6 @@ void Mstp::DoWriteRequest(void)
 	sendframe.apdu(FrameDataRequest, i.dst, master.sudomaster, apdu.GetApdu(), apdu.Length());
 	if( com.Send(sendframe.data(), sendframe.length()) )
 	{
-		sendframe.showhex();
 		recvok = false;
 		sendtime.init();
 		master.invokeid++;
@@ -344,8 +344,6 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 		case 0x20://APDU_TYPE_SIMPLE_ACK:
 		case 0x30://APDU_TYPE_COMPLEX_ACK:
 			retry = 0;
-			isvalue = true;
-			instancelist.pop_front();
 			break;
 		case 0x50://APDU_TYPE_ERROR:
 			printf("APDU_TYPE_ERROR\n");
@@ -356,55 +354,66 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 		case 0x70://APDU_TYPE_ABORT:
 			printf("APDU_TYPE_ABORT\n");
 			return false;
+		default:
+			printf("APDU_TYPE_UNKONW(%d)\n", *f.apdu());
+			return false;
 	}
 	static TimeOperator t;
+	Instance &i = instancelist.front();
 
 	printf("%d", t.mdiff());
 	t.init();
 	if( apdu.IsBool() )
 	{
-		getvalue.value.f= apdu.Unsigned();
-		getvalue.instance = apdu.Instance();
-		getvalue.type = (u32)BACNET_APPLICATION_TAG_BOOLEAN;
-		printf("---->Bool:instance(%d).value(%u)\n", apdu.Instance(), apdu.Unsigned());
+		i.value.f = apdu.Unsigned();
+		printf("---->Bool:instance(%d=%d).value(%u)\n", 
+				i.instance, instancelist.front().instance, apdu.Unsigned()); 
 	}
 	else if( apdu.IsReal() )
 	{
-		getvalue.value.f= apdu.Real();
-		getvalue.instance = apdu.Instance();
-		getvalue.type = (u32)BACNET_APPLICATION_TAG_REAL;
-		printf("---->Real:instance(%d).value(%f)\n", apdu.Instance(), apdu.Real());
+		i.value.f = apdu.Real();
+		printf("---->Real:instance(%d=%d).value(%f)\n", 
+				apdu.Instance(), instancelist.front().instance, apdu.Real());
 	}
 	else if( apdu.IsSigned() )
 	{
-		getvalue.value.f= apdu.Signed();
-		getvalue.instance = apdu.Instance();
-		getvalue.type = (u32)BACNET_APPLICATION_TAG_SIGNED_INT;
-		printf("---->Signed:instance(%d).value(%d)\n", apdu.Instance(), apdu.Signed());
+		i.value.f = apdu.Signed();
+		printf("---->Signed:instance(%d=%d).value(%d)\n", 
+				apdu.Instance(), instancelist.front().instance, apdu.Signed());
 	}
 	else if( apdu.IsUnsigned() )
 	{
-		getvalue.value.f= apdu.Unsigned();
-		getvalue.instance = apdu.Instance();
-		getvalue.type = (u32)BACNET_APPLICATION_TAG_UNSIGNED_INT;
-		printf("---->Unsigned:instance(%d).value(%u)\n", apdu.Instance(), apdu.Unsigned());
+		i.value.f = apdu.Unsigned();
+		printf("---->Unsigned:instance(%d=%d).value(%u)\n", 
+				apdu.Instance(), instancelist.front().instance, apdu.Unsigned());
 	}
 	else if( apdu.IsEnumerated() )
 	{
-		getvalue.value.f= apdu.Unsigned();
-		getvalue.instance = apdu.Instance();
-		getvalue.type = (u32)BACNET_APPLICATION_TAG_ENUMERATED;
-		printf("---->Enumerated:instance(%d).value(%u)\n", apdu.Instance(), apdu.Enumerated());
+		i.value.f = apdu.Unsigned();
+		printf("---->Enumerated:instance(%d=%d).value(%u)\n", 
+				apdu.Instance(), instancelist.front().instance, apdu.Enumerated());
 	}
+	if( instancelist.front().instance == apdu.Instance() )
+	{
+		if( getvalue )
+		{
+			double v = i.value.f;
+			getvalue(i.name, v, "mstp");
+			if( i.name.empty() == false )
+			{
+				printf("%s = %f\n", i.name.data(), i.value.f);
+			}
+		}
+	}
+	valuelist.push_back(i);
+	instancelist.pop_front();
 	return true;
 }
-bool Mstp::GetValue(Instance& i)
+void Mstp::GetValue( bool(*f)(const string&, double, const string&) )
 {
-	if( isvalue )
-	{
-		i = getvalue;
-		isvalue = false;
-		return true;
-	}
-	return false;
+	getvalue = f;
+}
+list<Instance>& Mstp::ValueList(void)
+{
+	return valuelist;
 }

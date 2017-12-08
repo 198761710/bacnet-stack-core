@@ -89,18 +89,18 @@ class Mstp
 {
 protected:
 	int retry;
-	bool isvalue;
 	bool recvok;
 	ComPort com;
 	Master master;
 	RecvFrame frame;
-	Instance getvalue;
 	TimeOperator sendtime;
 	TimeOperator recvtime;
 	TimeOperator recving;
 	list<Instance> instancelist;
+	list<Instance> valuelist;
 	map<char, Offline> offline;
 	map<char, TimeOperator> mastermap;
+	bool(*getvalue)(const string&,double,const string&);
 
 public:
 	Mstp(void);
@@ -131,7 +131,9 @@ public:
 	bool ProcTestRequestAck(RecvFrame& f);
 	bool ProcDataRequest(RecvFrame& f);
 	bool ProcDataRequestAck(RecvFrame& f);
+
 public:
-	bool GetValue(Instance& i);
+	void GetValue( bool(*f)(const string&, double, const string&) );
+	list<Instance>& ValueList(void);
 };
 #endif//__MSTP_H__

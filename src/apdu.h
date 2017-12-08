@@ -78,6 +78,7 @@ public:
 	int32_t Signed(void);
 	uint32_t Unsigned(void);
 	uint32_t Enumerated(void);
+	uint32_t Tag(void);
 	uint32_t Instance(void);
 	uint8_t  InvokeId(void);
 	uint8_t* GetApdu(void);
