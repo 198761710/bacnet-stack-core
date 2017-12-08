@@ -68,5 +68,5 @@ int uart_write(int fd,  const char *data, int len)
 
 int uart_close(int fd)
 {
-	return close(fd);
+	return (close(fd) == 0);
 }

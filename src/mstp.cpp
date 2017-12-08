@@ -7,9 +7,13 @@ Mstp::Mstp(void)
 {
 	retry = 0;
 	recvok = false;
+	isvalue = false;
 }
 Mstp::Mstp(const string& dev, int baud, int parity, int bsize, int stop)
 {
+	retry = 0;
+	recvok = false;
+	isvalue = false;
 	assert( com.Open(dev) );
 	assert( com.Set(baud, parity, bsize, stop) );
 }
@@ -26,6 +30,7 @@ bool Mstp::Run(void)
 		}
 		if( frame.check() )
 		{
+			offline[frame.src()].recvtime.init();
 			ProcFrame(frame);
 			recvtime.init();
 			frame.clear();
@@ -68,10 +73,10 @@ void Mstp::DoRequest(void)
 	Instance &i = instancelist.front();
 	switch( i.cmd )
 	{
-		case GetValue:
+		case CmdGetValue:
 			DoReadRequest();
 			break;
-		case SetValue:
+		case CmdSetValue:
 			DoWriteRequest();
 			break;
 	}
@@ -81,6 +86,17 @@ void Mstp::DoReadRequest(void)
 	Apdu apdu;
 	SendFrame sendframe;
 	Instance &i = instancelist.front();
+	Offline &o = offline[i.dst];
+
+	if( o.recvtime.sdiff() > 10 )
+	{
+		if( o.retry.sdiff() < 1 )
+		{
+			instancelist.pop_front();
+			return;
+		}
+		o.retry.init();
+	}
 
 	switch( i.type )
 	{
@@ -180,6 +196,7 @@ void Mstp::DoWriteRequest(void)
 	sendframe.apdu(FrameDataRequest, i.dst, master.sudomaster, apdu.GetApdu(), apdu.Length());
 	if( com.Send(sendframe.data(), sendframe.length()) )
 	{
+		sendframe.showhex();
 		recvok = false;
 		sendtime.init();
 		master.invokeid++;
@@ -198,6 +215,28 @@ void Mstp::Add(const Instance& instance)
 {
 	instancelist.push_back(instance);
 }
+void Mstp::PushBack(const Instance& instance)
+{
+	instancelist.push_back(instance);
+}
+void Mstp::PushFront(const Instance& instance)
+{
+	instancelist.push_front(instance);
+}
+void Mstp::PushBack(list<Instance>& ilist)
+{
+	for(list<Instance>::iterator i = ilist.begin(); i != ilist.end(); i++)
+	{
+		instancelist.push_back(*i);
+	}
+}
+void Mstp::PushFront(list<Instance>& ilist)
+{
+	for(list<Instance>::iterator i = ilist.begin(); i != ilist.end(); i++)
+	{
+		instancelist.push_front(*i);
+	}
+}
 bool Mstp::Empty(void)
 {
 	return instancelist.empty();
@@ -209,6 +248,10 @@ bool Mstp::Open(const string& dev)
 bool Mstp::Set(int baud, int parity, int bsize, int stop)
 {
 	return com.Set(baud, parity, bsize, stop);
+}
+bool Mstp::Close(void)
+{
+	return com.Close();
 }
 bool Mstp::ProcFrame(RecvFrame& f)
 {
@@ -301,6 +344,7 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 		case 0x20://APDU_TYPE_SIMPLE_ACK:
 		case 0x30://APDU_TYPE_COMPLEX_ACK:
 			retry = 0;
+			isvalue = true;
 			instancelist.pop_front();
 			break;
 		case 0x50://APDU_TYPE_ERROR:
@@ -319,23 +363,48 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 	t.init();
 	if( apdu.IsBool() )
 	{
+		getvalue.value.f= apdu.Unsigned();
+		getvalue.instance = apdu.Instance();
+		getvalue.type = (u32)BACNET_APPLICATION_TAG_BOOLEAN;
 		printf("---->Bool:instance(%d).value(%u)\n", apdu.Instance(), apdu.Unsigned());
 	}
 	else if( apdu.IsReal() )
 	{
+		getvalue.value.f= apdu.Real();
+		getvalue.instance = apdu.Instance();
+		getvalue.type = (u32)BACNET_APPLICATION_TAG_REAL;
 		printf("---->Real:instance(%d).value(%f)\n", apdu.Instance(), apdu.Real());
 	}
 	else if( apdu.IsSigned() )
 	{
+		getvalue.value.f= apdu.Signed();
+		getvalue.instance = apdu.Instance();
+		getvalue.type = (u32)BACNET_APPLICATION_TAG_SIGNED_INT;
 		printf("---->Signed:instance(%d).value(%d)\n", apdu.Instance(), apdu.Signed());
 	}
 	else if( apdu.IsUnsigned() )
 	{
+		getvalue.value.f= apdu.Unsigned();
+		getvalue.instance = apdu.Instance();
+		getvalue.type = (u32)BACNET_APPLICATION_TAG_UNSIGNED_INT;
 		printf("---->Unsigned:instance(%d).value(%u)\n", apdu.Instance(), apdu.Unsigned());
 	}
 	else if( apdu.IsEnumerated() )
 	{
+		getvalue.value.f= apdu.Unsigned();
+		getvalue.instance = apdu.Instance();
+		getvalue.type = (u32)BACNET_APPLICATION_TAG_ENUMERATED;
 		printf("---->Enumerated:instance(%d).value(%u)\n", apdu.Instance(), apdu.Enumerated());
 	}
 	return true;
+}
+bool Mstp::GetValue(Instance& i)
+{
+	if( isvalue )
+	{
+		i = getvalue;
+		isvalue = false;
+		return true;
+	}
+	return false;
 }

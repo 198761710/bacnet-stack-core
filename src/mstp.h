@@ -21,12 +21,31 @@ typedef enum
 	StateToken = 1,
 	StateRequest = 2,
 }StateType;
+
 typedef enum
 {
-	GetValue = 0,
-	SetValue = 1,
+	CmdGetValue = 0,
+	CmdSetValue = 1,
 }CmdType;
 
+typedef enum
+{
+	FrameToken			= 0x00,
+	FramePollMaster		= 0x01,
+	FramePollMasterAck	= 0x02,
+	FrameTestRequest	= 0x03,
+	FrameTestRequestAck	= 0x04,
+	FrameDataRequest	= 0x05,
+	FrameDataRequestAck	= 0x06,
+}FrameType;
+
+
+class Offline
+{
+public:
+	TimeOperator retry;
+	TimeOperator recvtime;
+};
 class Master
 {
 public:
@@ -51,6 +70,7 @@ public:
 		int32_t i;
 		uint32_t u;
 	}value;
+	string name;
 
 public:
 	Instance(void)
@@ -69,14 +89,17 @@ class Mstp
 {
 protected:
 	int retry;
+	bool isvalue;
 	bool recvok;
 	ComPort com;
 	Master master;
 	RecvFrame frame;
+	Instance getvalue;
 	TimeOperator sendtime;
 	TimeOperator recvtime;
 	TimeOperator recving;
 	list<Instance> instancelist;
+	map<char, Offline> offline;
 	map<char, TimeOperator> mastermap;
 
 public:
@@ -90,9 +113,14 @@ public:
 	void DoReadRequest(void);
 	void DoWriteRequest(void);
 	void Add(const Instance&);
+	void PushBack(const Instance&);
+	void PushFront(const Instance&);
+	void PushBack(list<Instance>&);
+	void PushFront(list<Instance>&);
 	bool Empty(void);
 	bool Open(const string&);
 	bool Set(int, int, int, int);
+	bool Close(void);
 
 public:
 	bool ProcFrame(RecvFrame& f);
@@ -103,17 +131,7 @@ public:
 	bool ProcTestRequestAck(RecvFrame& f);
 	bool ProcDataRequest(RecvFrame& f);
 	bool ProcDataRequestAck(RecvFrame& f);
+public:
+	bool GetValue(Instance& i);
 };
-
-typedef enum
-{
-	FrameToken			= 0x00,
-	FramePollMaster		= 0x01,
-	FramePollMasterAck	= 0x02,
-	FrameTestRequest	= 0x03,
-	FrameTestRequestAck	= 0x04,
-	FrameDataRequest	= 0x05,
-	FrameDataRequestAck	= 0x06,
-}FrameType;
-
 #endif//__MSTP_H__

@@ -38,6 +38,7 @@ int main(void)
 		mstp.Run();
 		usleep(100);
 	}
+	mstp.Close();
 
 	return 0;
 }

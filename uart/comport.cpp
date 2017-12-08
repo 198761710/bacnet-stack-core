@@ -8,10 +8,7 @@ bool ComPort::IsOpen(void)
 }
 bool ComPort::Open(const string& path)
 {
-	if( -1 == fd )
-	{
-		fd = uart_open(path.data());
-	}
+	fd = uart_open(path.data());
 	return (-1 != fd);
 }
 bool ComPort::Set(int baud, char parity, int bsize, int stop)
@@ -57,8 +54,16 @@ bool ComPort::Block(bool b)
 }
 bool ComPort::Close(void)
 {
-	uart_close(fd);
-	fd = -1;
+	if(  fd < 0 )
+	{
+		return true;
+	}
+	if( uart_close(fd) )
+	{
+		fd = -1;
+		return true;
+	}
+	return false;
 }
 bool ComPort::SetMode(int mode)
 {

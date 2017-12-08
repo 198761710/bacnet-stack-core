@@ -29,7 +29,7 @@ target: $(TARGET)
 install:bacnet-core.a
 	[ -d lib ] || mkdir lib
 bacnet-core.a:$(OBJ)
-	@$(AR) -rc $@ $+
+	$(AR) -rc $@ $+
 mstp.exe:$(OBJ) ztest/mstp.o
 	@$(CC) $+ -o $@
 recvframe.exe:$(OBJ) ztest/recvframe.o
