@@ -3,6 +3,17 @@
 #include "bacenum.h"
 #include "mstp.h"
 
+void GetRecvRate(Mstp& mstp)
+{
+	list<RecvRate> rlist;
+	mstp.GetRecvRate(rlist);
+	for(list<RecvRate>::iterator i = rlist.begin(); i != rlist.end(); i++)
+	{
+		printf("mac(%d):[recvcount(%d)/sendcount(%d)]=%.0f%%\n", 
+				i->mac, i->rcount, i->scount, i->rate);
+	}
+	mstp.InitRecvRate();
+}
 void Get(Mstp& mstp)
 {
 	{
@@ -22,10 +33,8 @@ void Set(Mstp& mstp)
 {
 	if( mstp.Empty() )
 	{
-		static float value = 0;
-		//mstp.Add( InstanceF(1, 1, OBJECT_ANALOG_VALUE, 202,  value++) );
-		//mstp.Add( InstanceF(1, 1, OBJECT_ANALOG_VALUE, 1020, value++) );
 		Get(mstp);
+		GetRecvRate(mstp);
 	}
 }
 int main(void)

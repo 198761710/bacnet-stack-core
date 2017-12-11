@@ -139,6 +139,7 @@ void Mstp::DoReadRequest(void)
 	if( com.Send(sendframe.data(), sendframe.length()) )
 	{
 		recvok = false;
+		sendcount[sendframe.dst()]++;
 		sendtime.init();
 		master.invokeid++;
 		if( retry++ > 2 )
@@ -197,7 +198,9 @@ void Mstp::DoWriteRequest(void)
 	sendframe.apdu(FrameDataRequest, i.dst, master.sudomaster, apdu.GetApdu(), apdu.Length());
 	if( com.Send(sendframe.data(), sendframe.length()) )
 	{
+		sendframe.showhex();
 		recvok = false;
+		sendcount[sendframe.dst()]++;
 		sendtime.init();
 		master.invokeid++;
 		if( retry++ > 2 )
@@ -221,7 +224,14 @@ void Mstp::PushBack(const Instance& instance)
 }
 void Mstp::PushFront(const Instance& instance)
 {
-	instancelist.push_front(instance);
+	if( instancelist.empty() )
+	{
+		instancelist.push_front(instance);
+	}
+	else
+	{
+		instancelist.insert(++instancelist.begin(), instance);
+	}
 }
 void Mstp::PushBack(list<Instance>& ilist)
 {
@@ -335,6 +345,7 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 	Apdu apdu;
 
 	recvok = true;
+	recvcount[f.src()]++;
 	if( f.dlen() > 2 )
 	{
 		apdu.ParseApdu(f.apdu(), f.dlen()-2);
@@ -358,40 +369,28 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 			printf("APDU_TYPE_UNKONW(%d)\n", *f.apdu());
 			return false;
 	}
-	static TimeOperator t;
+
 	Instance &i = instancelist.front();
 
-	printf("%d", t.mdiff());
-	t.init();
 	if( apdu.IsBool() )
 	{
 		i.value.f = apdu.Unsigned();
-		printf("---->Bool:instance(%d=%d).value(%u)\n", 
-				i.instance, instancelist.front().instance, apdu.Unsigned()); 
 	}
 	else if( apdu.IsReal() )
 	{
 		i.value.f = apdu.Real();
-		printf("---->Real:instance(%d=%d).value(%f)\n", 
-				apdu.Instance(), instancelist.front().instance, apdu.Real());
 	}
 	else if( apdu.IsSigned() )
 	{
 		i.value.f = apdu.Signed();
-		printf("---->Signed:instance(%d=%d).value(%d)\n", 
-				apdu.Instance(), instancelist.front().instance, apdu.Signed());
 	}
 	else if( apdu.IsUnsigned() )
 	{
 		i.value.f = apdu.Unsigned();
-		printf("---->Unsigned:instance(%d=%d).value(%u)\n", 
-				apdu.Instance(), instancelist.front().instance, apdu.Unsigned());
 	}
 	else if( apdu.IsEnumerated() )
 	{
 		i.value.f = apdu.Unsigned();
-		printf("---->Enumerated:instance(%d=%d).value(%u)\n", 
-				apdu.Instance(), instancelist.front().instance, apdu.Enumerated());
 	}
 	if( instancelist.front().instance == apdu.Instance() )
 	{
@@ -399,15 +398,72 @@ bool Mstp::ProcDataRequestAck(RecvFrame& f)
 		{
 			double v = i.value.f;
 			getvalue(i.name, v, "mstp");
-			if( i.name.empty() == false )
-			{
-				printf("%s = %f\n", i.name.data(), i.value.f);
-			}
 		}
+		static TimeOperator t;
+		printf("[%d][%-6s]=%-3.1f\n", t.mdiff(), GetName(i).data(), i.value.f);
+		t.init();
 	}
 	valuelist.push_back(i);
 	instancelist.pop_front();
 	return true;
+}
+void Mstp::InitRecvRate(void)
+{
+	for(map<u8,u32>::iterator i = recvcount.begin(); i != recvcount.end(); i++)
+	{
+		i->second = 0;
+	}
+	for(map<u8,u32>::iterator i = sendcount.begin(); i != sendcount.end(); i++)
+	{
+		i->second = 0;
+	}
+}
+void Mstp::GetRecvRate(list<RecvRate>& rlist)
+{
+	for(map<u8,u32>::iterator i = sendcount.begin(); i != sendcount.end(); i++)
+	{
+		u8 d = i->first;
+		u32 s = i->second;
+		u32 r = recvcount[d];
+
+		if( 0 == s )
+		{
+			rlist.push_back( RecvRate(d, r, s, float(100.0)) );
+		}
+		else
+		{
+			rlist.push_back( RecvRate(d, r, s, float(r)/float(s) * 100.0) );
+		}
+	}
+
+}
+string Mstp::GetName(Instance& i)
+{
+	char buf[32] = {0};
+
+	snprintf(buf, sizeof(buf), "%d", i.instance);
+	switch(i.type)
+	{
+		case OBJECT_ANALOG_INPUT:
+			return string("AI") + buf;
+		case OBJECT_ANALOG_OUTPUT:
+			return string("AO") + buf;
+		case OBJECT_ANALOG_VALUE:
+			return string("AV") + buf;
+		case OBJECT_BINARY_INPUT:
+			return string("BI") + buf;
+		case OBJECT_BINARY_OUTPUT:
+			return string("BO") + buf;
+		case OBJECT_BINARY_VALUE:
+			return string("BV") + buf;
+		case OBJECT_MULTI_STATE_INPUT:
+			return string("MI") + buf;
+		case OBJECT_MULTI_STATE_OUTPUT:
+			return string("MO") + buf;
+		case OBJECT_MULTI_STATE_VALUE:
+			return string("MV") + buf;
+	}
+	return string("XU") + buf;
 }
 void Mstp::GetValue( bool(*f)(const string&, double, const string&) )
 {

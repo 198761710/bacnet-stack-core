@@ -39,7 +39,17 @@ typedef enum
 	FrameDataRequestAck	= 0x06,
 }FrameType;
 
-
+class RecvRate
+{
+public:
+	u8 mac;
+	u32 rcount;
+	u32 scount;
+	float rate;
+public:
+	RecvRate(void):mac(0),rcount(0),scount(0),rate(0.0){};
+	RecvRate(u8 m, u32 r, u32 s, float R):mac(m),rcount(r),scount(s),rate(R){}
+};
 class Offline
 {
 public:
@@ -81,6 +91,7 @@ public:
 		:cmd(c),dst(d),type(t),instance(i){value.u=v;}
 	Instance(u8 c, u8 d, u32 t, u32 i, float v)
 		:cmd(c),dst(d),type(t),instance(i){value.f=v;}
+public:
 };
 #define InstanceU(c, d, t, i, v) Instance(c, d, (u32)t, (u32)i, (u32)v)
 #define InstanceF(c, d, t, i, v) Instance(c, d, (u32)t, (u32)i, (float)v)
@@ -93,6 +104,8 @@ protected:
 	ComPort com;
 	Master master;
 	RecvFrame frame;
+	map<u8,u32> recvcount;
+	map<u8,u32> sendcount;
 	TimeOperator sendtime;
 	TimeOperator recvtime;
 	TimeOperator recving;
@@ -133,6 +146,9 @@ public:
 	bool ProcDataRequestAck(RecvFrame& f);
 
 public:
+	void InitRecvRate(void);
+	void GetRecvRate(list<RecvRate>& rlist);
+	string GetName(Instance&);
 	void GetValue( bool(*f)(const string&, double, const string&) );
 	list<Instance>& ValueList(void);
 };

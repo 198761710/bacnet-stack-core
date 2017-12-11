@@ -78,7 +78,7 @@ int Apdu::SetBinaryInput(int id, int instance, uint32_t v)
 
 	rpvalue.context_specific = 0;
 	rpvalue.context_tag		 = 0;
-	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
 	rpvalue.type.Unsigned_Int= v;
 
 	len = bacapp_encode_data(data, &rpvalue);
@@ -93,6 +93,7 @@ int Apdu::SetBinaryInput(int id, int instance, uint32_t v)
 	wpdata.object_instance		= instance;
 	wpdata.object_property		= PROP_PRESENT_VALUE;
 	wpdata.array_index			= BACNET_ARRAY_ALL;
+	wpdata.priority				= BACNET_MAX_PRIORITY;
 
 	return (length = wp_encode_apdu(apdu, id, &wpdata));
 }
@@ -102,7 +103,7 @@ int Apdu::SetBinaryOutput(int id, int instance, uint32_t v)
 
 	rpvalue.context_specific = 0;
 	rpvalue.context_tag		 = 0;
-	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
 	rpvalue.type.Unsigned_Int= v;
 
 	len = bacapp_encode_data(data, &rpvalue);
@@ -117,6 +118,7 @@ int Apdu::SetBinaryOutput(int id, int instance, uint32_t v)
 	wpdata.object_instance		= instance;
 	wpdata.object_property		= PROP_PRESENT_VALUE;
 	wpdata.array_index			= BACNET_ARRAY_ALL;
+	wpdata.priority				= BACNET_MAX_PRIORITY;
 
 	return (length = wp_encode_apdu(apdu, id, &wpdata));
 }
@@ -126,7 +128,7 @@ int Apdu::SetBinaryValue(int id, int instance, uint32_t v)
 
 	rpvalue.context_specific = 0;
 	rpvalue.context_tag		 = 0;
-	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
 	rpvalue.type.Unsigned_Int= v;
 
 	len = bacapp_encode_data(data, &rpvalue);
@@ -141,6 +143,7 @@ int Apdu::SetBinaryValue(int id, int instance, uint32_t v)
 	wpdata.object_instance		= instance;
 	wpdata.object_property		= PROP_PRESENT_VALUE;
 	wpdata.array_index			= BACNET_ARRAY_ALL;
+	wpdata.priority				= BACNET_MAX_PRIORITY;
 
 	return (length = wp_encode_apdu(apdu, id, &wpdata));
 }
@@ -222,7 +225,7 @@ int Apdu::SetMultiStateInput(int id, int instance, uint32_t v)
 
 	rpvalue.context_specific = 0;
 	rpvalue.context_tag		 = 0;
-	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
 	rpvalue.type.Unsigned_Int= v;
 
 	len = bacapp_encode_data(data, &rpvalue);
@@ -237,6 +240,7 @@ int Apdu::SetMultiStateInput(int id, int instance, uint32_t v)
 	wpdata.object_instance		= instance;
 	wpdata.object_property		= PROP_PRESENT_VALUE;
 	wpdata.array_index			= BACNET_ARRAY_ALL;
+	wpdata.priority				= BACNET_MAX_PRIORITY;
 
 	return (length = wp_encode_apdu(apdu, id, &wpdata));
 }
@@ -246,7 +250,7 @@ int Apdu::SetMultiStateOutput(int id, int instance, uint32_t v)
 
 	rpvalue.context_specific = 0;
 	rpvalue.context_tag		 = 0;
-	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
 	rpvalue.type.Unsigned_Int= v;
 
 	len = bacapp_encode_data(data, &rpvalue);
@@ -261,6 +265,7 @@ int Apdu::SetMultiStateOutput(int id, int instance, uint32_t v)
 	wpdata.object_instance		= instance;
 	wpdata.object_property		= PROP_PRESENT_VALUE;
 	wpdata.array_index			= BACNET_ARRAY_ALL;
+	wpdata.priority				= BACNET_MAX_PRIORITY;
 
 	return (length = wp_encode_apdu(apdu, id, &wpdata));
 }
@@ -270,7 +275,7 @@ int Apdu::SetMultiStateValue(int id, int instance, uint32_t v)
 
 	rpvalue.context_specific = 0;
 	rpvalue.context_tag		 = 0;
-	rpvalue.tag				 = BACNET_APPLICATION_TAG_ENUMERATED;
+	rpvalue.tag				 = BACNET_APPLICATION_TAG_UNSIGNED_INT;
 	rpvalue.type.Unsigned_Int= v;
 
 	len = bacapp_encode_data(data, &rpvalue);
@@ -285,6 +290,7 @@ int Apdu::SetMultiStateValue(int id, int instance, uint32_t v)
 	wpdata.object_instance		= instance;
 	wpdata.object_property		= PROP_PRESENT_VALUE;
 	wpdata.array_index			= BACNET_ARRAY_ALL;
+	wpdata.priority				= BACNET_MAX_PRIORITY;
 
 	return (length = wp_encode_apdu(apdu, id, &wpdata));
 }
