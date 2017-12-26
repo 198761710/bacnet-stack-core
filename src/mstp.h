@@ -111,7 +111,8 @@ protected:
 	TimeOperator recving;
 	list<Instance> instancelist;
 	list<Instance> valuelist;
-	map<char, Offline> offline;
+	map<char, Offline> offlineread;
+	map<char, Offline> offlinewrite;
 	map<char, TimeOperator> mastermap;
 	bool(*getvalue)(const string&,double,const string&);
 

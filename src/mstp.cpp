@@ -31,7 +31,8 @@ bool Mstp::Run(void)
 		}
 		if( frame.check() )
 		{
-			offline[frame.src()].recvtime.init();
+			offlineread[frame.src()].recvtime.init();
+			offlinewrite[frame.src()].recvtime.init();
 			ProcFrame(frame);
 			recvtime.init();
 			frame.clear();
@@ -67,7 +68,7 @@ void Mstp::DoRequest(void)
 	{
 		return;
 	}
-	if( recvok == false && sendtime.mdiff() < 200 )
+	if( recvok == false && sendtime.mdiff() < 120 )
 	{
 		return;
 	}
@@ -87,11 +88,11 @@ void Mstp::DoReadRequest(void)
 	Apdu apdu;
 	SendFrame sendframe;
 	Instance &i = instancelist.front();
-	Offline &o = offline[i.dst];
+	Offline &o = offlineread[i.dst];
 
-	if( o.recvtime.sdiff() > 10 )
+	if( o.recvtime.sdiff() > 20 )
 	{
-		if( o.retry.sdiff() < 1 )
+		if( o.retry.sdiff() < 10 )
 		{
 			instancelist.pop_front();
 			return;
@@ -142,7 +143,7 @@ void Mstp::DoReadRequest(void)
 		sendcount[sendframe.dst()]++;
 		sendtime.init();
 		master.invokeid++;
-		if( retry++ > 2 )
+		if( retry++ > 0 )
 		{
 			retry = 0;
 			instancelist.pop_front();
@@ -158,6 +159,18 @@ void Mstp::DoWriteRequest(void)
 	Apdu apdu;
 	SendFrame sendframe;
 	Instance &i = instancelist.front();
+	Offline &o = offlinewrite[i.dst];
+
+	if( o.recvtime.sdiff() > 10 )
+	{
+		if( o.retry.sdiff() < 5 )
+		{
+			instancelist.pop_front();
+			return;
+		}
+		o.retry.init();
+	}
+
 
 	switch( i.type )
 	{
@@ -203,7 +216,7 @@ void Mstp::DoWriteRequest(void)
 		sendcount[sendframe.dst()]++;
 		sendtime.init();
 		master.invokeid++;
-		if( retry++ > 2 )
+		if( retry++ > 0 )
 		{
 			retry = 0;
 			instancelist.pop_front();
@@ -428,7 +441,7 @@ void Mstp::GetRecvRate(list<RecvRate>& rlist)
 
 		if( 0 == s )
 		{
-			rlist.push_back( RecvRate(d, r, s, float(100.0)) );
+			rlist.push_back( RecvRate(d, 0, 0, float(0.0)) );
 		}
 		else
 		{
